@@ -185,7 +185,7 @@ void abs_test(void) {
   deallocate_matrix(mat);
 }
 
-void transpose_test(void) {
+void transpose_square_test(void) {
   matrix *mat = NULL;
   allocate_matrix(&mat, 2, 2);
   set(mat, 0, 0, 1);
@@ -198,6 +198,27 @@ void transpose_test(void) {
   CU_ASSERT_EQUAL(get(trans, 1, 0), 2);
   CU_ASSERT_EQUAL(get(trans, 1, 1), 4);
   deallocate_matrix(mat);
+  deallocate_matrix(trans);
+}
+
+void transpose_non_square_test(void) {
+  matrix *mat = NULL;
+  allocate_matrix(&mat, 2, 3);
+  set(mat, 0, 0, 1);
+  set(mat, 0, 1, 2);
+  set(mat, 0, 2, 3);
+  set(mat, 1, 0, 4);
+  set(mat, 1, 1, 5);
+  set(mat, 1, 2, 6);
+  matrix *trans = trans_matrix(mat);
+  CU_ASSERT_EQUAL(get(trans, 0, 0), 1);
+  CU_ASSERT_EQUAL(get(trans, 0, 1), 4);
+  CU_ASSERT_EQUAL(get(trans, 1, 0), 2);
+  CU_ASSERT_EQUAL(get(trans, 1, 1), 5);
+  CU_ASSERT_EQUAL(get(trans, 2, 0), 3);
+  CU_ASSERT_EQUAL(get(trans, 2, 1), 6);
+  deallocate_matrix(mat);
+  deallocate_matrix(trans);
 }
 
 void mul_square_test(void) {
@@ -260,6 +281,42 @@ void mul_non_square_test(void) {
   deallocate_matrix(mat2);
 }
 
+void pow_zero_test(void) {
+  matrix *result = NULL;
+  matrix *mat = NULL;
+  CU_ASSERT_EQUAL(allocate_matrix(&result, 2, 2), 0);
+  CU_ASSERT_EQUAL(allocate_matrix(&mat, 2, 2), 0);
+  set(mat, 0, 0, 1);
+  set(mat, 0, 1, 1);
+  set(mat, 1, 0, 1);
+  set(mat, 1, 1, 1);
+  pow_matrix(result, mat, 0);
+  CU_ASSERT_EQUAL(get(result, 0, 0), 1);
+  CU_ASSERT_EQUAL(get(result, 0, 1), 0);
+  CU_ASSERT_EQUAL(get(result, 1, 0), 0);
+  CU_ASSERT_EQUAL(get(result, 1, 1), 1);
+  deallocate_matrix(result);
+  deallocate_matrix(mat);
+}
+
+void pow_one_test(void) {
+  matrix *result = NULL;
+  matrix *mat = NULL;
+  CU_ASSERT_EQUAL(allocate_matrix(&result, 2, 2), 0);
+  CU_ASSERT_EQUAL(allocate_matrix(&mat, 2, 2), 0);
+  set(mat, 0, 0, 1);
+  set(mat, 0, 1, 0);
+  set(mat, 1, 0, 1);
+  set(mat, 1, 1, 1);
+  pow_matrix(result, mat, 1);
+  CU_ASSERT_EQUAL(get(result, 0, 0), 1);
+  CU_ASSERT_EQUAL(get(result, 0, 1), 0);
+  CU_ASSERT_EQUAL(get(result, 1, 0), 1);
+  CU_ASSERT_EQUAL(get(result, 1, 1), 1);
+  deallocate_matrix(result);
+  deallocate_matrix(mat);
+}
+
 void pow_test(void) {
   matrix *result = NULL;
   matrix *mat = NULL;
@@ -303,21 +360,23 @@ int main (void)
 
    /* add the tests to the suite */
    if ((CU_add_test(pSuite, "add_test", add_test) == NULL) ||
-        /* (OPTIONAL) Uncomment the following lines if you have implemented sub_matrix and neg_matrix.
         (CU_add_test(pSuite, "sub_test", sub_test) == NULL) ||
         (CU_add_test(pSuite, "neg_test", neg_test) == NULL) ||
-        */
         (CU_add_test(pSuite, "mul_square_test", mul_square_test) == NULL) ||
         (CU_add_test(pSuite, "mul_non_square_test", mul_non_square_test) == NULL) ||
         (CU_add_test(pSuite, "abs_test", abs_test) == NULL) ||
         (CU_add_test(pSuite, "pow_test", pow_test) == NULL) ||
+        (CU_add_test(pSuite, "pow_zero_test", pow_zero_test) == NULL) ||
+        (CU_add_test(pSuite, "pow_one_test", pow_one_test) == NULL) ||
         (CU_add_test(pSuite, "alloc_fail_test", alloc_fail_test) == NULL) ||
         (CU_add_test(pSuite, "alloc_success_test", alloc_success_test) == NULL) ||
         (CU_add_test(pSuite, "alloc_ref_fail_test", alloc_ref_fail_test) == NULL) ||
         (CU_add_test(pSuite, "alloc_ref_success_test", alloc_ref_success_test) == NULL) ||
         (CU_add_test(pSuite, "dealloc_null_test", dealloc_null_test) == NULL) ||
         (CU_add_test(pSuite, "get_test", get_test) == NULL) ||
-        (CU_add_test(pSuite, "set_test", set_test) == NULL)
+        (CU_add_test(pSuite, "set_test", set_test) == NULL) ||
+        (CU_add_test(pSuite, "transpose_square_test", transpose_square_test) == NULL) ||
+        (CU_add_test(pSuite, "transpose_non_square_test", transpose_non_square_test) == NULL)
      )
    {
       CU_cleanup_registry();

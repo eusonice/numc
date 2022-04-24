@@ -364,16 +364,15 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  */
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     // Task 1.6 TODO
-    /*
     matrix *trans = trans_matrix(mat2);
     int row = mat1->rows;
     int num = mat1->cols;
     int col = trans->rows;
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
-            double temp[4];
             double sum = 0.0;
             for (int k = 0; k < num / 4 * 4; k += 4) {
+                double temp[4];
                 __m256d mul_vector = _mm256_mul_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]));
                 _mm256_storeu_pd(temp, mul_vector);
                 sum += temp[0] + temp[1] + temp[2] + temp[3];
@@ -381,11 +380,9 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
-            result->data[col * i + j] = sum;
+            result->data[row * i + j] = sum;
         }
     }
-    deallocate_matrix(trans);
-    */
     /*
     matrix *trans = trans_matrix(mat2);
     int row = mat1->rows;
@@ -398,11 +395,12 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
                 double value = mat1->data[num * i + k] * trans->data[num * j + k];
                 sum += value;
             }
-            result->data[col * i + j] = sum;
+            result->data[row * i + j] = sum;
         }
     }
     deallocate_matrix(trans);
     */
+   /*
     int row = mat1->rows;
     int num = mat1->cols;
     int col = mat2->cols;
@@ -418,6 +416,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             result->data[col * i + j] = sum;
         }
     }
+    */
     return 0;
 }
 
