@@ -179,32 +179,18 @@ int allocate_matrix_ref(matrix **mat, matrix *from, int offset, int rows, int co
  */
 void fill_matrix(matrix *mat, double val) {
     // Task 1.5 TODO
-    /*
-    double arr[4] = {val, val, val, val};
-    __m256d fill_vector = _mm256_loadu_pd((__m256d *) arr);
     int row = mat->rows;
     int col = mat->cols;
-    for (unsigned int i = 0; i < row; i++) {
-        for (unsigned int j = 0; j < col / 4 * 4; j += 4) {
+    __m256d fill_vector = _mm256_set1_pd(val);
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col / 4 * 4; j += 4) {
             _mm256_storeu_pd(&mat->data[col * i + j], fill_vector);
         }
-        for (unsigned int j = col / 4 * 4; j < col; j++) {
+        for (int j = col / 4 * 4; j < col; j++) {
             mat->data[col * i + j] = val;
         }
     }
-    */
-    /*
-    double arr[4] = {val, val, val, val};
-    __m256d fill_vector = _mm256_loadu_pd((__m256d *) arr);
-    int num_elem = mat->rows * mat->cols;
-    for (unsigned int i = 0; i < num_elem / 4 * 4; i += 4) {
-        _mm256_storeu_pd(&mat->data[i], fill_vector);
-    }
-    for (unsigned int i = num_elem / 4 * 4; i < num_elem; i++) {
-        mat->data[i] = val;
-    }
-    return;
-    */
+   /*
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
@@ -213,6 +199,7 @@ void fill_matrix(matrix *mat, double val) {
             mat->data[index] = val;
         }
     }
+    */
     return;
 }
 
@@ -224,46 +211,25 @@ void fill_matrix(matrix *mat, double val) {
 int abs_matrix(matrix *result, matrix *mat) {
     // Task 1.5 TODO
     // maybe max{오리지널 그대로, 0 - mat} -> 절댓값 
-    /*
-    double arr[4] = {0.0, 0.0, 0.0, 0.0};
     int row = mat->rows;
     int col = mat->cols;
-    for (unsigned int i = 0; i < row; i++) {
-        for (unsigned int j = 0; j < col / 4 * 4; j += 4) {
-            __m256d sub_vector = _mm256_loadu_pd((__m256d *) arr);
-            __m256d orig_vector = _mm256_loadu_pd((__m256 *) mat + col * i + j);
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col / 4 * 4; j += 4) {
+            __m256d sub_vector = _mm256_set1_pd(0.0);
+            __m256d orig_vector = _mm256_loadu_pd(&mat->data[col * i + j]);
             sub_vector = _mm256_max_pd(_mm256_sub_pd(sub_vector, orig_vector), orig_vector);
             _mm256_storeu_pd(&result->data[col * i + j], sub_vector);
         }
-        for (unsigned int j = col / 4 * 4; j < col; j++) {
+        for (int j = col / 4 * 4; j < col; j++) {
             int index = col * i + j;
             double value = mat->data[index];
             if (value < 0) {
                 value *= -1;
             }
-            mat->data[col * i + j] = value;
+            result->data[col * i + j] = value;
         }
     }
-    return 0;
-    */
     /*
-    double arr[4] = {0.0, 0.0, 0.0, 0.0};
-    int num_elem = mat->rows * mat->cols;
-    for (unsigned int i = 0; i < num_elem / 4 * 4; i += 4) {
-        __m256d sub_vector = _mm256_loadu_pd((__m256d *) arr);
-        __m256d orig_vector = _mm256_loadu_pd((__m256 *) mat + i);
-        sub_vector = _mm256_max_pd(_mm256_sub_pd(sub_vector, orig_vector), orig_vector);
-        _mm256_storeu_pd(&result->data[i], sub_vector);
-    }
-    for (unsigned int i = num_elem / 4 * 4; i < num_elem; i++) {
-        double value = mat->data[i];
-        if (value < 0) {
-            value *= -1;
-        }
-        result->data[i] = value;
-    }
-    return 0;
-    */
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
@@ -276,6 +242,7 @@ int abs_matrix(matrix *result, matrix *mat) {
             result->data[index] = value;
         }
     }
+    */
     return 0;
 }
 
@@ -290,28 +257,31 @@ int neg_matrix(matrix *result, matrix *mat) {
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col / 4 * 4; j += 4) {
+            __m256d neg_vector = _mm256_set1_pd(0.0);
+            __m256d orig_vector = _mm256_loadu_pd(&mat->data[col * i + j]);
+            neg_vector = _mm256_sub_pd(neg_vector, orig_vector);
+            _mm256_storeu_pd(&result->data[col * i + j], neg_vector);
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
+            int index = col * i + j;
+            double value = mat->data[index];
+            result->data[col * i + j] = -value;
+        }
+    }
+    /*
+    int row = mat->rows;
+    int col = mat->cols;
+    for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             int index = col * i + j;
             double value = mat->data[index];
             result->data[index] = -value;
         }
     }
+    */
     return 0;
 }
-
-/* Below are some intel intrinsics that might be useful
- * void _mm256_storeu_pd (double * mem_addr, __m256d a)
- * __m256d _mm256_set1_pd (double a)
- * __m256d _mm256_set_pd (double e3, double e2, double e1, double e0)
- * __m256d _mm256_loadu_pd (double const * mem_addr)
- * __m256d _mm256_add_pd (__m256d a, __m256d b)
- * __m256d _mm256_sub_pd (__m256d a, __m256d b)
- * __m256d _mm256_fmadd_pd (__m256d a, __m256d b, __m256d c)
- * __m256d _mm256_mul_pd (__m256d a, __m256d b)
- * __m256d _mm256_cmp_pd (__m256d a, __m256d b, const int imm8)
- * __m256d _mm256_and_pd (__m256d a, __m256d b)
- * __m256d _mm256_max_pd (__m256d a, __m256d b)
-*/
 
 /*
  * Store the result of adding mat1 and mat2 to `result`.
@@ -320,20 +290,20 @@ int neg_matrix(matrix *result, matrix *mat) {
  * Note that the matrix is in row-major order.
  */
 int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    /*
-    double arr[4] = {0.0, 0.0, 0.0, 0.0};
-    int num_elem = mat1->rows * mat1->cols;
-    for (unsigned int i = 0; i < num_elem / 4 * 4; i += 4) {
-        __m256d sum_vector = _mm256_loadu_pd((__m256d *) arr);
-        sum_vector = _mm256_add_pd(_mm256_add_pd(sum_vector, _mm256_loadu_pd((__m256 *) mat1 + i)), _mm256_loadu_pd((__m256 *) mat2 + i));
-        _mm256_storeu_pd(&result->data[i], sum_vector);
-    }
-    for (unsigned int i = num_elem / 4 * 4; i < num_elem; i++) {
-        result->data[i] = mat1->data[i] + mat2->data[i];
-    }
-    return 0;
-    */
     // Task 1.5 TODO
+    int row = mat1->rows;
+    int col = mat1->cols;
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col / 4 * 4; j += 4) {
+            __m256d sum_vector = _mm256_loadu_pd(&mat1->data[col * i + j]);
+            sum_vector = _mm256_add_pd(sum_vector, _mm256_loadu_pd(&mat2->data[col * i + j]));
+            _mm256_storeu_pd(&result->data[col * i + j], sum_vector);
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
+            result->data[col * i + j] = mat1->data[col * i + j] + mat2->data[col * i + j];
+        }
+    }
+    /*
     int row = mat1->rows;
     int col = mat1->cols;
     for (int i = 0; i < row; i++) {
@@ -343,6 +313,7 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             result->data[index] = value;
         }
     }
+    */
     return 0;
 }
 
@@ -358,12 +329,26 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     int row = mat1->rows;
     int col = mat1->cols;
     for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col / 4 * 4; j += 4) {
+            __m256d sub_vector = _mm256_loadu_pd(&mat1->data[col * i + j]);
+            sub_vector = _mm256_sub_pd(sub_vector, _mm256_loadu_pd(&mat2->data[col * i + j]));
+            _mm256_storeu_pd(&result->data[col * i + j], sub_vector);
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
+            result->data[col * i + j] = mat1->data[col * i + j] - mat2->data[col * i + j];
+        }
+    }
+    /*
+    int row = mat1->rows;
+    int col = mat1->cols;
+    for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             int index = col * i + j;
             double value = mat1->data[index] - mat2->data[index];
             result->data[index] = value;
         }
     }
+    */
     return 0;
 }
 
