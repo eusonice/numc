@@ -386,6 +386,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     }
     deallocate_matrix(trans);
     */
+    /*
     matrix *trans = trans_matrix(mat2);
     int row = mat1->rows;
     int num = mat1->cols;
@@ -401,7 +402,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
         }
     }
     deallocate_matrix(trans);
-    /*
+    */
     int row = mat1->rows;
     int num = mat1->cols;
     int col = mat2->cols;
@@ -417,7 +418,6 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             result->data[col * i + j] = sum;
         }
     }
-    */
     return 0;
 }
 
