@@ -365,6 +365,11 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     // Task 1.6 TODO
     matrix *trans = trans_matrix(mat2);
+    // 4 * 3, 3 * 8
+    // row = 4
+    // num = 3
+    // trans = 8 * 3
+    // col = 8
     int row = mat1->rows;
     int num = mat1->cols;
     int col = trans->rows;
@@ -380,7 +385,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
-            result->data[row * i + j] = sum;
+            result->data[col * i + j] = sum;
         }
     }
     /*
@@ -395,7 +400,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
                 double value = mat1->data[num * i + k] * trans->data[num * j + k];
                 sum += value;
             }
-            result->data[row * i + j] = sum;
+            result->data[col * i + j] = sum; 
         }
     }
     deallocate_matrix(trans);
