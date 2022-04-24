@@ -118,7 +118,7 @@ void add_test(void) {
   deallocate_matrix(mat2);
 }
 
-/* (OPTIONAL) Uncomment the following sub_test if you have decided to implement it in matrix.c.
+/*(OPTIONAL) Uncomment the following sub_test if you have decided to implement it in matrix.c.
 void sub_test(void) {
   matrix *result = NULL;
   matrix *mat1 = NULL;
