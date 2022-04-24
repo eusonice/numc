@@ -182,6 +182,7 @@ void fill_matrix(matrix *mat, double val) {
     int row = mat->rows;
     int col = mat->cols;
     __m256d fill_vector = _mm256_set1_pd(val);
+    #pragma omp parallel for
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col / 4 * 4; j += 4) {
             _mm256_storeu_pd(&mat->data[col * i + j], fill_vector);
@@ -190,7 +191,7 @@ void fill_matrix(matrix *mat, double val) {
             mat->data[col * i + j] = val;
         }
     }
-   /*
+    /*
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
@@ -213,6 +214,7 @@ int abs_matrix(matrix *result, matrix *mat) {
     // maybe max{오리지널 그대로, 0 - mat} -> 절댓값 
     int row = mat->rows;
     int col = mat->cols;
+    #pragma omp parallel for
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col / 4 * 4; j += 4) {
             __m256d sub_vector = _mm256_set1_pd(0.0);
@@ -293,6 +295,7 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     // Task 1.5 TODO
     int row = mat1->rows;
     int col = mat1->cols;
+    #pragma omp parallel for
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col / 4 * 4; j += 4) {
             __m256d sum_vector = _mm256_loadu_pd(&mat1->data[col * i + j]);
@@ -361,6 +364,7 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  */
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     // Task 1.6 TODO
+    /*
     matrix *trans = trans_matrix(mat2);
     int row = mat1->rows;
     int num = mat1->cols;
@@ -381,7 +385,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
         }
     }
     deallocate_matrix(trans);
-    /*
+    */
     matrix *trans = trans_matrix(mat2);
     int row = mat1->rows;
     int num = mat1->cols;
@@ -397,7 +401,6 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
         }
     }
     deallocate_matrix(trans);
-    */
     /*
     int row = mat1->rows;
     int num = mat1->cols;
