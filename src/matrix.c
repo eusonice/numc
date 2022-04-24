@@ -179,6 +179,21 @@ int allocate_matrix_ref(matrix **mat, matrix *from, int offset, int rows, int co
  */
 void fill_matrix(matrix *mat, double val) {
     // Task 1.5 TODO
+    /*
+    double arr[4] = {val, val, val, val};
+    __m256d fill_vector = _mm256_loadu_pd((__m256d *) arr);
+    int row = mat->rows;
+    int col = mat->cols;
+    for (unsigned int i = 0; i < row; i++) {
+        for (unsigned int j = 0; j < col / 4 * 4; j += 4) {
+            _mm256_storeu_pd(&mat->data[col * i + j], fill_vector);
+        }
+        for (unsigned int j = col / 4 * 4; j < col; j++) {
+            mat->data[col * i + j] = val;
+        }
+    }
+    */
+    /*
     double arr[4] = {val, val, val, val};
     __m256d fill_vector = _mm256_loadu_pd((__m256d *) arr);
     int num_elem = mat->rows * mat->cols;
@@ -189,7 +204,7 @@ void fill_matrix(matrix *mat, double val) {
         mat->data[i] = val;
     }
     return;
-    /*
+    */
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
@@ -199,7 +214,6 @@ void fill_matrix(matrix *mat, double val) {
         }
     }
     return;
-    */
 }
 
 /*
@@ -210,6 +224,29 @@ void fill_matrix(matrix *mat, double val) {
 int abs_matrix(matrix *result, matrix *mat) {
     // Task 1.5 TODO
     // maybe max{오리지널 그대로, 0 - mat} -> 절댓값 
+    /*
+    double arr[4] = {0.0, 0.0, 0.0, 0.0};
+    int row = mat->rows;
+    int col = mat->cols;
+    for (unsigned int i = 0; i < row; i++) {
+        for (unsigned int j = 0; j < col / 4 * 4; j += 4) {
+            __m256d sub_vector = _mm256_loadu_pd((__m256d *) arr);
+            __m256d orig_vector = _mm256_loadu_pd((__m256 *) mat + col * i + j);
+            sub_vector = _mm256_max_pd(_mm256_sub_pd(sub_vector, orig_vector), orig_vector);
+            _mm256_storeu_pd(&result->data[col * i + j], sub_vector);
+        }
+        for (unsigned int j = col / 4 * 4; j < col; j++) {
+            int index = col * i + j;
+            double value = mat->data[index];
+            if (value < 0) {
+                value *= -1;
+            }
+            mat->data[col * i + j] = value;
+        }
+    }
+    return 0;
+    */
+    /*
     double arr[4] = {0.0, 0.0, 0.0, 0.0};
     int num_elem = mat->rows * mat->cols;
     for (unsigned int i = 0; i < num_elem / 4 * 4; i += 4) {
@@ -226,7 +263,7 @@ int abs_matrix(matrix *result, matrix *mat) {
         result->data[i] = value;
     }
     return 0;
-    /*
+    */
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
@@ -240,7 +277,6 @@ int abs_matrix(matrix *result, matrix *mat) {
         }
     }
     return 0;
-    */
 }
 
 /*
@@ -284,6 +320,7 @@ int neg_matrix(matrix *result, matrix *mat) {
  * Note that the matrix is in row-major order.
  */
 int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
+    /*
     double arr[4] = {0.0, 0.0, 0.0, 0.0};
     int num_elem = mat1->rows * mat1->cols;
     for (unsigned int i = 0; i < num_elem / 4 * 4; i += 4) {
@@ -295,8 +332,8 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
         result->data[i] = mat1->data[i] + mat2->data[i];
     }
     return 0;
+    */
     // Task 1.5 TODO
-    /*
     int row = mat1->rows;
     int col = mat1->cols;
     for (int i = 0; i < row; i++) {
@@ -307,7 +344,6 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
         }
     }
     return 0;
-    */
 }
 
 /*
