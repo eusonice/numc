@@ -332,17 +332,13 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     int row = mat1->rows;
     int num = mat1->cols;
     int col = trans->rows;
-    
+    #pragma omp parallel for
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             double sum = 0.0;
             __m256d mul_vector = _mm256_set1_pd(0.0);
             for (int k = 0; k < num / 4 * 4; k += 4) {
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
-                //double temp[4] = {0.0, 0.0, 0.0, 0.0};
-                //__m256d mul_vector = _mm256_mul_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]));
-                //_mm256_storeu_pd(temp, mul_vector);
-                //sum += temp[0] + temp[1] + temp[2] + temp[3];
             }
             double temp[4] = {};
             _mm256_storeu_pd(temp, mul_vector);
