@@ -187,16 +187,19 @@ void abs_test(void) {
 
 void transpose_square_test(void) {
   matrix *mat = NULL;
-  allocate_matrix(&mat, 2, 2);
+  allocate_matrix(&mat, 5, 5);
+  fill_matrix(mat, 0.0);
   set(mat, 0, 0, 1);
   set(mat, 0, 1, 2);
-  set(mat, 1, 0, 3);
-  set(mat, 1, 1, 4);
+  set(mat, 0, 2, 3);
+  set(mat, 0, 3, 4);
+  set(mat, 0, 4, 5);
   matrix *trans = trans_matrix(mat);
   CU_ASSERT_EQUAL(get(trans, 0, 0), 1);
-  CU_ASSERT_EQUAL(get(trans, 0, 1), 3);
   CU_ASSERT_EQUAL(get(trans, 1, 0), 2);
-  CU_ASSERT_EQUAL(get(trans, 1, 1), 4);
+  CU_ASSERT_EQUAL(get(trans, 2, 0), 3);
+  CU_ASSERT_EQUAL(get(trans, 3, 0), 4);
+  CU_ASSERT_EQUAL(get(trans, 4, 0), 5);
   deallocate_matrix(mat);
   deallocate_matrix(trans);
 }
@@ -221,7 +224,7 @@ void transpose_non_square_test(void) {
   deallocate_matrix(trans);
 }
 
-void mul_square_test(void) {
+void mul_square_test1(void) {
   matrix *result = NULL;
   matrix *mat1 = NULL;
   matrix *mat2 = NULL;
@@ -249,7 +252,27 @@ void mul_square_test(void) {
   deallocate_matrix(mat2);
 }
 
-void mul_non_square_test(void) {
+void mul_square_test2(void) {
+  matrix *result = NULL;
+  matrix *mat1 = NULL;
+  matrix *mat2 = NULL;
+  CU_ASSERT_EQUAL(allocate_matrix(&result, 4, 4), 0);
+  CU_ASSERT_EQUAL(allocate_matrix(&mat1, 4, 4), 0);
+  CU_ASSERT_EQUAL(allocate_matrix(&mat2, 4, 4), 0);
+  fill_matrix(mat1, 1.0);
+  fill_matrix(mat2, 1.0);
+  mul_matrix(result, mat1, mat2);
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      CU_ASSERT_EQUAL(get(result, i, j), 4);
+    }
+  }
+  deallocate_matrix(result);
+  deallocate_matrix(mat1);
+  deallocate_matrix(mat2);
+}
+
+void mul_non_square_test1(void) {
   matrix *result = NULL;
   matrix *mat1 = NULL;
   matrix *mat2 = NULL;
@@ -276,6 +299,35 @@ void mul_non_square_test(void) {
   CU_ASSERT_EQUAL(get(result, 2, 0), 29);
   CU_ASSERT_EQUAL(get(result, 2, 1), 40);
   CU_ASSERT_EQUAL(get(result, 2, 2), 51);
+  deallocate_matrix(result);
+  deallocate_matrix(mat1);
+  deallocate_matrix(mat2);
+}
+
+void mul_non_square_test2(void) {
+  matrix *result = NULL;
+  matrix *mat1 = NULL;
+  matrix *mat2 = NULL;
+  CU_ASSERT_EQUAL(allocate_matrix(&result, 2, 2), 0);
+  CU_ASSERT_EQUAL(allocate_matrix(&mat1, 2, 3), 0);
+  CU_ASSERT_EQUAL(allocate_matrix(&mat2, 3, 2), 0);
+  set(mat1, 0, 0, 3);
+  set(mat1, 0, 1, -1);
+  set(mat1, 0, 2, 2);
+  set(mat1, 1, 0, -1);
+  set(mat1, 1, 1, -1);
+  set(mat1, 1, 2, -1);
+  set(mat2, 0, 0, 1);
+  set(mat2, 0, 1, 4);
+  set(mat2, 1, 0, -1);
+  set(mat2, 1, 1, 0);
+  set(mat2, 2, 0, 1);
+  set(mat2, 2, 1, 3);
+  mul_matrix(result, mat1, mat2);
+  CU_ASSERT_EQUAL(get(result, 0, 0), 6);
+  CU_ASSERT_EQUAL(get(result, 0, 1), 18);
+  CU_ASSERT_EQUAL(get(result, 1, 0), -1);
+  CU_ASSERT_EQUAL(get(result, 1, 1), -7);
   deallocate_matrix(result);
   deallocate_matrix(mat1);
   deallocate_matrix(mat2);
@@ -362,8 +414,10 @@ int main (void)
    if ((CU_add_test(pSuite, "add_test", add_test) == NULL) ||
         (CU_add_test(pSuite, "sub_test", sub_test) == NULL) ||
         (CU_add_test(pSuite, "neg_test", neg_test) == NULL) ||
-        (CU_add_test(pSuite, "mul_square_test", mul_square_test) == NULL) ||
-        (CU_add_test(pSuite, "mul_non_square_test", mul_non_square_test) == NULL) ||
+        (CU_add_test(pSuite, "mul_square_test1", mul_square_test1) == NULL) ||
+        (CU_add_test(pSuite, "mul_square_test2", mul_square_test2) == NULL) ||
+        (CU_add_test(pSuite, "mul_non_square_test1", mul_non_square_test1) == NULL) ||
+        (CU_add_test(pSuite, "mul_non_square_test2", mul_non_square_test2) == NULL) ||
         (CU_add_test(pSuite, "abs_test", abs_test) == NULL) ||
         (CU_add_test(pSuite, "pow_test", pow_test) == NULL) ||
         (CU_add_test(pSuite, "pow_zero_test", pow_zero_test) == NULL) ||

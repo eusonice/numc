@@ -364,6 +364,7 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  */
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     // Task 1.6 TODO
+    
     matrix *trans = trans_matrix(mat2);
     // 4 * 3, 3 * 8
     // row = 4
@@ -376,12 +377,17 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             double sum = 0.0;
+            __m256d mul_vector = _mm256_set1_pd(0.0);
             for (int k = 0; k < num / 4 * 4; k += 4) {
-                double temp[4];
-                __m256d mul_vector = _mm256_mul_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]));
-                _mm256_storeu_pd(temp, mul_vector);
-                sum += temp[0] + temp[1] + temp[2] + temp[3];
+                mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
+                //double temp[4] = {0.0, 0.0, 0.0, 0.0};
+                //__m256d mul_vector = _mm256_mul_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]));
+                //_mm256_storeu_pd(temp, mul_vector);
+                //sum += temp[0] + temp[1] + temp[2] + temp[3];
             }
+            double temp[4] = {};
+            _mm256_storeu_pd(temp, mul_vector);
+            sum += (temp[0] + temp[1] + temp[2] + temp[3]);
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
@@ -405,7 +411,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     }
     deallocate_matrix(trans);
     */
-   /*
+    /*
     int row = mat1->rows;
     int num = mat1->cols;
     int col = mat2->cols;
@@ -431,6 +437,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  * Note that the matrix is in row-major order.
  */
 matrix* trans_matrix(matrix *mat) {
+    /*
     matrix *trans;
     allocate_matrix(&trans, mat->cols, mat->rows);
     int row = mat->rows;
@@ -444,7 +451,7 @@ matrix* trans_matrix(matrix *mat) {
             trans->data[row * j + i] = mat->data[col * i + j];
         }
     }
-    /*
+    */
     matrix *trans;
     allocate_matrix(&trans, mat->cols, mat->rows);
     int row = mat->rows;
@@ -454,7 +461,6 @@ matrix* trans_matrix(matrix *mat) {
             trans->data[row * j + i] = mat->data[col * i + j];
         }
     }
-    */
     return trans;
 }
 
