@@ -49,7 +49,6 @@ void rand_matrix(matrix *result, unsigned int seed, double low, double high) {
  * You may assume `row` and `col` are valid. Note that the matrix is in row-major order.
  */
 double get(matrix *mat, int row, int col) {
-    // Task 1.1 TODO
     // gets an element from the matrix data at the specified row and column (zero-indexed)
     int index = (mat->cols) * row + col;
     return mat->data[index];
@@ -60,7 +59,6 @@ double get(matrix *mat, int row, int col) {
  * `col` are valid. Note that the matrix is in row-major order.
  */
 void set(matrix *mat, int row, int col, double val) {
-    // Task 1.1 TODO
     // puts the given value in the matrix data at the specified row and column
     int index = (mat->cols) * row + col;
     mat->data[index] = val;
@@ -76,16 +74,6 @@ void set(matrix *mat, int row, int col, double val) {
  * Return 0 upon success.
  */
 int allocate_matrix(matrix **mat, int rows, int cols) {
-    // Task 1.2 TODO
-    // HINTS: Follow these steps.
-    // 1. Check if the dimensions are valid. Return -1 if either dimension is not positive.
-    // 2. Allocate space for the new matrix struct. Return -2 if allocating memory failed.
-    // 3. Allocate space for the matrix data, initializing all entries to be 0. Return -2 if allocating memory failed.
-    // 4. Set the number of rows and columns in the matrix struct according to the arguments provided.
-    // 5. Set the `parent` field to NULL, since this matrix was not created from a slice.
-    // 6. Set the `ref_cnt` field to 1.
-    // 7. Store the address of the allocated matrix struct at the location `mat` is pointing at.
-    // 8. Return 0 upon success.
     // allocates space for a new matrix struct with the provided number of rows and columns
     if (!(rows > 0 && cols > 0)) {
         return -1;
@@ -112,11 +100,6 @@ int allocate_matrix(matrix **mat, int rows, int cols) {
  * matrix has no other references (including itself).
  */
 void deallocate_matrix(matrix *mat) {
-    // Task 1.3 TODO
-    // HINTS: Follow these steps.
-    // 1. If the matrix pointer `mat` is NULL, return.
-    // 2. If `mat` has no parent: decrement its `ref_cnt` field by 1. If the `ref_cnt` field becomes 0, then free `mat` and its `data` field.
-    // 3. Otherwise, recursively call `deallocate_matrix` on `mat`'s parent, then free `mat`.
     // frees a matrix struct and, if no other structs are pointing at the data, frees the data as well
     if (mat == NULL) {
         return;
@@ -147,16 +130,6 @@ void deallocate_matrix(matrix *mat) {
  * there is no need to allocate space for matrix data.
  */
 int allocate_matrix_ref(matrix **mat, matrix *from, int offset, int rows, int cols) {
-    // Task 1.4 TODO
-    // HINTS: Follow these steps.
-    // 1. Check if the dimensions are valid. Return -1 if either dimension is not positive.
-    // 2. Allocate space for the new matrix struct. Return -2 if allocating memory failed.
-    // 3. Set the `data` field of the new struct to be the `data` field of the `from` struct plus `offset`.
-    // 4. Set the number of rows and columns in the new struct according to the arguments provided.
-    // 5. Set the `parent` field of the new struct to the `from` struct pointer.
-    // 6. Increment the `ref_cnt` field of the `from` struct by 1.
-    // 7. Store the address of the allocated matrix struct at the location `mat` is pointing at.
-    // 8. Return 0 upon success.
     // allocates space for a matrix struct created by slicing an existing matrix struct
     if (!(rows > 0 && cols > 0)) {
         return -1;
@@ -178,7 +151,6 @@ int allocate_matrix_ref(matrix **mat, matrix *from, int offset, int rows, int co
  * Sets all entries in mat to val. Note that the matrix is in row-major order.
  */
 void fill_matrix(matrix *mat, double val) {
-    // Task 1.5 TODO
     int row = mat->rows;
     int col = mat->cols;
     __m256d fill_vector = _mm256_set1_pd(val);
@@ -210,8 +182,6 @@ void fill_matrix(matrix *mat, double val) {
  * Note that the matrix is in row-major order.
  */
 int abs_matrix(matrix *result, matrix *mat) {
-    // Task 1.5 TODO
-    // maybe max{오리지널 그대로, 0 - mat} -> 절댓값 
     int row = mat->rows;
     int col = mat->cols;
     #pragma omp parallel for
@@ -249,13 +219,11 @@ int abs_matrix(matrix *result, matrix *mat) {
 }
 
 /*
- * (OPTIONAL)
  * Store the result of element-wise negating mat's entries to `result`.
  * Return 0 upon success.
  * Note that the matrix is in row-major order.
  */
 int neg_matrix(matrix *result, matrix *mat) {
-    // Task 1.5 TODO
     int row = mat->rows;
     int col = mat->cols;
     for (int i = 0; i < row; i++) {
@@ -292,7 +260,6 @@ int neg_matrix(matrix *result, matrix *mat) {
  * Note that the matrix is in row-major order.
  */
 int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    // Task 1.5 TODO
     int row = mat1->rows;
     int col = mat1->cols;
     #pragma omp parallel for
@@ -321,14 +288,12 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
 }
 
 /*
- * (OPTIONAL)
  * Store the result of subtracting mat2 from mat1 to `result`.
  * Return 0 upon success.
  * You may assume `mat1` and `mat2` have the same dimensions.
  * Note that the matrix is in row-major order.
  */
 int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    // Task 1.5 TODO
     int row = mat1->rows;
     int col = mat1->cols;
     for (int i = 0; i < row; i++) {
@@ -363,17 +328,11 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  * Note that the matrix is in row-major order.
  */
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    // Task 1.6 TODO
-    
     matrix *trans = trans_matrix(mat2);
-    // 4 * 3, 3 * 8
-    // row = 4
-    // num = 3
-    // trans = 8 * 3
-    // col = 8
     int row = mat1->rows;
     int num = mat1->cols;
     int col = trans->rows;
+    
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             double sum = 0.0;
@@ -394,23 +353,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             result->data[col * i + j] = sum;
         }
     }
-    /*
-    matrix *trans = trans_matrix(mat2);
-    int row = mat1->rows;
-    int num = mat1->cols;
-    int col = trans->rows;
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col; j++) {
-            double sum = 0.0;
-            for (int k = 0; k < num; k++) {
-                double value = mat1->data[num * i + k] * trans->data[num * j + k];
-                sum += value;
-            }
-            result->data[col * i + j] = sum; 
-        }
-    }
     deallocate_matrix(trans);
-    */
     /*
     int row = mat1->rows;
     int num = mat1->cols;
@@ -437,25 +380,11 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  * Note that the matrix is in row-major order.
  */
 matrix* trans_matrix(matrix *mat) {
-    /*
     matrix *trans;
     allocate_matrix(&trans, mat->cols, mat->rows);
     int row = mat->rows;
     int col = mat->cols;
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
-            __m256d trans_vector = _mm256_loadu_pd(&mat->data[col * i + j]);
-            _mm256_storeu_pd(&trans->data[row * j + i], trans_vector);
-        }
-        for (int j = col / 4 * 4; j < col; j++) {
-            trans->data[row * j + i] = mat->data[col * i + j];
-        }
-    }
-    */
-    matrix *trans;
-    allocate_matrix(&trans, mat->cols, mat->rows);
-    int row = mat->rows;
-    int col = mat->cols;
+    #pragma omp parallel for
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             trans->data[row * j + i] = mat->data[col * i + j];
@@ -478,6 +407,7 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
         fill_matrix(result, 0.0);
         int row = mat->rows;
         int col = mat->cols;
+        #pragma omp parallel for
         for (int i = 0; i < row; i++) {
             for (int j = 0; j < col; j++) {
                 if (i == j) {
@@ -488,6 +418,7 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
     } else if (pow == 1) {
         int row = mat->rows;
         int col = mat->cols;
+        #pragma omp parallel for
         for (int i = 0; i < row; i++) {
             for (int j = 0; j < col; j++) {
                 int index = col * i + j;
