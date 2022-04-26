@@ -436,19 +436,14 @@ matrix* trans_matrix(matrix *mat) {
 int pow_matrix(matrix *result, matrix *mat, int pow) {
     // Task 1.6 TODO
     if (pow == 0) {
-        // identity matrix
         fill_matrix(result, 0.0);
-        int row = mat->rows;
-        int col = mat->cols;
         #pragma omp parallel for
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
-                if (i == j) {
-                    set(result, i, j, 1.0);
-                }
-            }
+        for (int i = 0; i < mat->rows; i++) {
+            set(result, i, i, 1.0);
         }
     } else if (pow == 1) {
+        memcpy(result->data, mat->data, sizeof(double) * mat->rows * mat->cols);
+        /*
         int row = mat->rows;
         int col = mat->cols;
         #pragma omp parallel for
@@ -459,6 +454,7 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
                 result->data[index] = value;
             }
         }
+        */
     } else {
         matrix *store;
         allocate_matrix(&store, mat->rows, mat->cols);
