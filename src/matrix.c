@@ -103,22 +103,6 @@ void deallocate_matrix(matrix *mat) {
         deallocate_matrix(mat->parent);
         free(mat);
     }
-    /*
-    if (mat == NULL) {
-        return;
-    }
-    if (mat->parent == NULL) {
-        mat->ref_cnt -= 1;
-        if (mat->ref_cnt == 0) {
-            free(mat->data);
-            free(mat);
-            return;
-        } else {
-            deallocate_matrix(mat->parent);
-            free(mat);
-        }
-    }
-    */
 }
 
 /*
@@ -171,17 +155,6 @@ void fill_matrix(matrix *mat, double val) {
             mat->data[col * i + j] = val;
         }
     }
-    /*
-    #pragma omp parallel for
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
-            _mm256_storeu_pd(&mat->data[col * i + j], fill_vector);
-        }
-        for (int j = col / 4 * 4; j < col; j++) {
-            mat->data[col * i + j] = val;
-        }
-    }
-    */
     return;
 }
 
@@ -228,25 +201,6 @@ int abs_matrix(matrix *result, matrix *mat) {
             result->data[col * i + j] = value;
         }
     }
-    /*
-    #pragma omp parallel for
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
-            __m256d sub_vector = _mm256_set1_pd(0.0);
-            __m256d orig_vector = _mm256_loadu_pd(&mat->data[col * i + j]);
-            sub_vector = _mm256_max_pd(_mm256_sub_pd(sub_vector, orig_vector), orig_vector);
-            _mm256_storeu_pd(&result->data[col * i + j], sub_vector);
-        }
-        for (int j = col / 4 * 4; j < col; j++) {
-            int index = col * i + j;
-            double value = mat->data[index];
-            if (value < 0) {
-                value *= -1;
-            }
-            result->data[col * i + j] = value;
-        }
-    }
-    */
     return 0;
 }
 
@@ -309,19 +263,6 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             result->data[col * i + j] = mat1->data[col * i + j] + mat2->data[col * i + j];
         }
     }
-    /*
-    #pragma omp parallel for
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
-            __m256d sum_vector = _mm256_loadu_pd(&mat1->data[col * i + j]);
-            sum_vector = _mm256_add_pd(sum_vector, _mm256_loadu_pd(&mat2->data[col * i + j]));
-            _mm256_storeu_pd(&result->data[col * i + j], sum_vector);
-        }
-        for (int j = col / 4 * 4; j < col; j++) {
-            result->data[col * i + j] = mat1->data[col * i + j] + mat2->data[col * i + j];
-        }
-    }
-    */
     return 0;
 }
 
@@ -373,26 +314,24 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
                 mul_vector3 = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 8]), _mm256_loadu_pd(&trans->data[num * j + k + 8]), mul_vector3);
                 mul_vector4 = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 12]), _mm256_loadu_pd(&trans->data[num * j + k + 12]), mul_vector4);
             }
-            double temp1[16] = {};
-            _mm256_storeu_pd(temp1, mul_vector1);
-            _mm256_storeu_pd(temp1 + 4, mul_vector2);
-            _mm256_storeu_pd(temp1 + 8, mul_vector3);
-            _mm256_storeu_pd(temp1 + 12, mul_vector4);
-            for (int i = 0; i < 16; i += 4) {
-                sum += temp1[i];
-                sum += temp1[i + 1];
-                sum += temp1[i + 2];
-                sum += temp1[i + 3];
-            }
+            double temp[20] = {};
+            _mm256_storeu_pd(temp, mul_vector1);
+            _mm256_storeu_pd(temp + 4, mul_vector2);
+            _mm256_storeu_pd(temp + 8, mul_vector3);
+            _mm256_storeu_pd(temp + 12, mul_vector4);
             __m256d mul_vector = _mm256_set1_pd(0.0);
             for (int k = num / 16 * 16; k < num / 4 * 4; k += 4) {
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
             }
-            double temp2[4] = {};
-            _mm256_storeu_pd(temp2, mul_vector);
-            sum += temp2[0] + temp2[1] + temp2[2] + temp2[3];
+            _mm256_storeu_pd(temp + 16, mul_vector);
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
+            }
+            for (int i = 0; i < 20; i += 4) {
+                sum += temp[i];
+                sum += temp[i + 1];
+                sum += temp[i + 2];
+                sum += temp[i + 3];
             }
             result->data[col * i + j] = sum;
         }
@@ -499,16 +438,6 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
             return mul_matrix(result, store, mat);
         }
         deallocate_matrix(store);
-        /*
-        mul_matrix(result, mat, mat);
-        matrix *store;
-        allocate_matrix(&store, mat->rows, mat->cols);
-        for (int i = 0; i < pow - 2; i++) {
-            memcpy(store->data, result->data, sizeof(double) * result->rows * result->cols);
-            mul_matrix(result, store, mat);
-        }
-        deallocate_matrix(store);
-        */
     }
     return 0;
 }
