@@ -88,6 +88,22 @@ int allocate_matrix(matrix **mat, int rows, int cols) {
  */
 void deallocate_matrix(matrix *mat) {
     // frees a matrix struct and, if no other structs are pointing at the data, frees the data as well
+    // "otherwise" refers to the case when the parent is not null (not the case where the ref count is not zero)
+    if (mat == NULL) {
+        return;
+    }
+    if (mat->parent == NULL) {
+        mat->ref_cnt -= 1;
+        if (mat->ref_cnt == 0) {
+            free(mat->data);
+            free(mat);
+            return;
+        }
+    } else {
+        deallocate_matrix(mat->parent);
+        free(mat);
+    }
+    /*
     if (mat == NULL) {
         return;
     }
@@ -102,6 +118,7 @@ void deallocate_matrix(matrix *mat) {
             free(mat);
         }
     }
+    */
 }
 
 /*
@@ -147,7 +164,10 @@ void fill_matrix(matrix *mat, double val) {
             _mm256_storeu_pd(&mat->data[col * i + j + 8], fill_vector);
             _mm256_storeu_pd(&mat->data[col * i + j + 12], fill_vector);
         }
-        for (int j = col / 16 * 16; j < col; j++) {
+        for (int j = col / 16 * 16; j < col / 4 * 4; j += 4) {
+            _mm256_storeu_pd(&mat->data[col * i + j], fill_vector);
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
             mat->data[col * i + j] = val;
         }
     }
@@ -193,7 +213,13 @@ int abs_matrix(matrix *result, matrix *mat) {
             _mm256_storeu_pd(&result->data[col * i + j + 8], sub_vector3);
             _mm256_storeu_pd(&result->data[col * i + j + 12], sub_vector4);
         }
-        for (int j = col / 16 * 16; j < col; j++) {
+        for (int j = col / 16 * 16; j < col / 4 * 4; j += 4) {
+            __m256d sub_vector = _mm256_set1_pd(0.0);
+            __m256d orig_vector = _mm256_loadu_pd(&mat->data[col * i + j]);
+            sub_vector = _mm256_max_pd(_mm256_sub_pd(sub_vector, orig_vector), orig_vector);
+            _mm256_storeu_pd(&result->data[col * i + j], sub_vector);
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
             int index = col * i + j;
             double value = mat->data[index];
             if (value < 0) {
@@ -274,7 +300,12 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             _mm256_storeu_pd(&result->data[col * i + j + 8], sum_vector3);
             _mm256_storeu_pd(&result->data[col * i + j + 12], sum_vector4);
         }
-        for (int j = col / 16 * 16; j < col; j++) {
+        for (int j = col / 16 * 16; j < col / 4 * 4; j += 4) {
+            __m256d sum_vector = _mm256_loadu_pd(&mat1->data[col * i + j]);
+            sum_vector = _mm256_add_pd(sum_vector, _mm256_loadu_pd(&mat2->data[col * i + j]));
+            _mm256_storeu_pd(&result->data[col * i + j], sum_vector);
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
             result->data[col * i + j] = mat1->data[col * i + j] + mat2->data[col * i + j];
         }
     }
@@ -342,18 +373,25 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
                 mul_vector3 = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 8]), _mm256_loadu_pd(&trans->data[num * j + k + 8]), mul_vector3);
                 mul_vector4 = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 12]), _mm256_loadu_pd(&trans->data[num * j + k + 12]), mul_vector4);
             }
-            double temp[16] = {};
-            _mm256_storeu_pd(temp, mul_vector1);
-            _mm256_storeu_pd(temp + 4, mul_vector2);
-            _mm256_storeu_pd(temp + 8, mul_vector3);
-            _mm256_storeu_pd(temp + 12, mul_vector4);
+            double temp1[16] = {};
+            _mm256_storeu_pd(temp1, mul_vector1);
+            _mm256_storeu_pd(temp1 + 4, mul_vector2);
+            _mm256_storeu_pd(temp1 + 8, mul_vector3);
+            _mm256_storeu_pd(temp1 + 12, mul_vector4);
             for (int i = 0; i < 16; i += 4) {
-                sum += temp[i];
-                sum += temp[i + 1];
-                sum += temp[i + 2];
-                sum += temp[i + 3];
+                sum += temp1[i];
+                sum += temp1[i + 1];
+                sum += temp1[i + 2];
+                sum += temp1[i + 3];
             }
-            for (int k = num / 16 * 16; k < num; k++) {
+            __m256d mul_vector = _mm256_set1_pd(0.0);
+            for (int k = num / 16 * 16; k < num / 4 * 4; k += 4) {
+                mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
+            }
+            double temp2[4] = {};
+            _mm256_storeu_pd(temp2, mul_vector);
+            sum += temp2[0] + temp2[1] + temp2[2] + temp2[3];
+            for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
             result->data[col * i + j] = sum;
@@ -412,7 +450,13 @@ matrix* trans_matrix(matrix *mat) {
             trans->data[row * (j + 14) + i] = mat->data[col * i + j + 14];
             trans->data[row * (j + 15) + i] = mat->data[col * i + j + 15];
         }
-        for (int j = col / 16 * 16; j < col; j++) {
+        for (int j = col / 16 * 16; j < col / 4 * 4; j += 4) {
+            trans->data[row * j + i] = mat->data[col * i + j];
+            trans->data[row * (j + 1) + i] = mat->data[col * i + j + 1];
+            trans->data[row * (j + 2) + i] = mat->data[col * i + j + 2];
+            trans->data[row * (j + 3) + i] = mat->data[col * i + j + 3];
+        }
+        for (int j = col / 4 * 4; j < col; j++) {
             trans->data[row * j + i] = mat->data[col * i + j];
         }
     }
@@ -443,18 +487,6 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
         }
     } else if (pow == 1) {
         memcpy(result->data, mat->data, sizeof(double) * mat->rows * mat->cols);
-        /*
-        int row = mat->rows;
-        int col = mat->cols;
-        #pragma omp parallel for
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
-                int index = col * i + j;
-                double value = mat->data[index];
-                result->data[index] = value;
-            }
-        }
-        */
     } else {
         matrix *store;
         allocate_matrix(&store, mat->rows, mat->cols);
