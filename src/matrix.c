@@ -411,7 +411,6 @@ matrix* trans_matrix(matrix *mat) {
             trans->data[row * (j + 13) + i] = mat->data[col * i + j + 13];
             trans->data[row * (j + 14) + i] = mat->data[col * i + j + 14];
             trans->data[row * (j + 15) + i] = mat->data[col * i + j + 15];
-            trans->data[row * (j + 16) + i] = mat->data[col * i + j + 16];
         }
         for (int j = col / 16 * 16; j < col; j++) {
             trans->data[row * j + i] = mat->data[col * i + j];
