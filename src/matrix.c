@@ -185,9 +185,9 @@ int abs_matrix(matrix *result, matrix *mat) {
             __m256d orig_vector3 = _mm256_loadu_pd(&mat->data[col * i + j] + 8);
             __m256d orig_vector4 = _mm256_loadu_pd(&mat->data[col * i + j] + 12);
             sub_vector1 = _mm256_max_pd(_mm256_sub_pd(sub_vector1, orig_vector1), orig_vector1);
-            sub_vector1 = _mm256_max_pd(_mm256_sub_pd(sub_vector2, orig_vector2), orig_vector2);
-            sub_vector1 = _mm256_max_pd(_mm256_sub_pd(sub_vector3, orig_vector3), orig_vector3);
-            sub_vector1 = _mm256_max_pd(_mm256_sub_pd(sub_vector4, orig_vector4), orig_vector4);
+            sub_vector2 = _mm256_max_pd(_mm256_sub_pd(sub_vector2, orig_vector2), orig_vector2);
+            sub_vector3 = _mm256_max_pd(_mm256_sub_pd(sub_vector3, orig_vector3), orig_vector3);
+            sub_vector4 = _mm256_max_pd(_mm256_sub_pd(sub_vector4, orig_vector4), orig_vector4);
             _mm256_storeu_pd(&result->data[col * i + j], sub_vector1);
             _mm256_storeu_pd(&result->data[col * i + j + 4], sub_vector2);
             _mm256_storeu_pd(&result->data[col * i + j + 8], sub_vector3);
