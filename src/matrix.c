@@ -214,7 +214,25 @@ int neg_matrix(matrix *result, matrix *mat) {
     int col = mat->cols;
     #pragma omp parallel for
     for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
+        for (int j = 0; j < col / 16 * 16; j += 16) {
+            __m256d neg_vector1 = _mm256_set1_pd(0.0);
+            __m256d neg_vector2 = _mm256_set1_pd(0.0);
+            __m256d neg_vector3 = _mm256_set1_pd(0.0);
+            __m256d neg_vector4 = _mm256_set1_pd(0.0);
+            __m256d orig_vector1 = _mm256_loadu_pd(&mat->data[col * i + j]);
+            __m256d orig_vector2 = _mm256_loadu_pd(&mat->data[col * i + j + 4]);
+            __m256d orig_vector3 = _mm256_loadu_pd(&mat->data[col * i + j] + 8);
+            __m256d orig_vector4 = _mm256_loadu_pd(&mat->data[col * i + j] + 12);
+            neg_vector1 = _mm256_sub_pd(neg_vector1, orig_vector1);
+            neg_vector2 = _mm256_sub_pd(neg_vector2, orig_vector2);
+            neg_vector3 = _mm256_sub_pd(neg_vector3, orig_vector3);
+            neg_vector4 = _mm256_sub_pd(neg_vector4, orig_vector4);
+            _mm256_storeu_pd(&result->data[col * i + j], neg_vector1);
+            _mm256_storeu_pd(&result->data[col * i + j + 4], neg_vector2);
+            _mm256_storeu_pd(&result->data[col * i + j + 8], neg_vector3);
+            _mm256_storeu_pd(&result->data[col * i + j + 12], neg_vector4);
+        }
+        for (int j = col / 16 * 16; j < col / 4 * 4; j += 4) {
             __m256d neg_vector = _mm256_set1_pd(0.0);
             __m256d orig_vector = _mm256_loadu_pd(&mat->data[col * i + j]);
             neg_vector = _mm256_sub_pd(neg_vector, orig_vector);
@@ -277,7 +295,21 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     int col = mat1->cols;
     #pragma omp parallel for
     for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
+        for (int j = 0; j < col / 16 * 16; j += 16) {
+            __m256d sub_vector1 = _mm256_loadu_pd(&mat1->data[col * i + j]);
+            __m256d sub_vector2 = _mm256_loadu_pd(&mat1->data[col * i + j + 4]);
+            __m256d sub_vector3 = _mm256_loadu_pd(&mat1->data[col * i + j + 8]);
+            __m256d sub_vector4 = _mm256_loadu_pd(&mat1->data[col * i + j + 12]);
+            sub_vector1 = _mm256_sub_pd(sub_vector1, _mm256_loadu_pd(&mat2->data[col * i + j]));
+            sub_vector2 = _mm256_sub_pd(sub_vector2, _mm256_loadu_pd(&mat2->data[col * i + j + 4]));
+            sub_vector3 = _mm256_sub_pd(sub_vector3, _mm256_loadu_pd(&mat2->data[col * i + j + 8]));
+            sub_vector4 = _mm256_sub_pd(sub_vector4, _mm256_loadu_pd(&mat2->data[col * i + j + 12]));
+            _mm256_storeu_pd(&result->data[col * i + j], sub_vector1);
+            _mm256_storeu_pd(&result->data[col * i + j + 4], sub_vector2);
+            _mm256_storeu_pd(&result->data[col * i + j + 8], sub_vector3);
+            _mm256_storeu_pd(&result->data[col * i + j + 12], sub_vector4);
+        }
+        for (int j = col / 16 * 16; j < col / 4 * 4; j += 4) {
             __m256d sub_vector = _mm256_loadu_pd(&mat1->data[col * i + j]);
             sub_vector = _mm256_sub_pd(sub_vector, _mm256_loadu_pd(&mat2->data[col * i + j]));
             _mm256_storeu_pd(&result->data[col * i + j], sub_vector);
@@ -304,7 +336,7 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             double sum = 0.0;
-            __m256d sum_vector = _mm256_set1_pd(0.0);
+            __m256d mul_vector = _mm256_set1_pd(0.0);
             __m256d mul_vector1 = _mm256_set1_pd(0.0);
             __m256d mul_vector2 = _mm256_set1_pd(0.0);
             __m256d mul_vector3 = _mm256_set1_pd(0.0);
@@ -315,61 +347,19 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
                 mul_vector3 = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 8]), _mm256_loadu_pd(&trans->data[num * j + k + 8]), mul_vector3);
                 mul_vector4 = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 12]), _mm256_loadu_pd(&trans->data[num * j + k + 12]), mul_vector4);
             }
-            sum_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector1, mul_vector2), mul_vector3), mul_vector4);
-            __m256d mul_vector = _mm256_set1_pd(0.0);
             for (int k = num / 16 * 16; k < num / 4 * 4; k += 4) {
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
             }
-            sum_vector = _mm256_add_pd(sum_vector, mul_vector);
-            for (int k = num / 4 * 4; k < num; k++) {
-                sum += mat1->data[num * i + k] * trans->data[num * j + k];
-            }
-            double temp[4] = {};
-            _mm256_storeu_pd(temp, sum_vector);
-            sum += temp[0] + temp[1] + temp[2] + temp[3];
-            /*
-            double temp[20] = {};
-            _mm256_storeu_pd(temp, mul_vector1);
-            _mm256_storeu_pd(temp + 4, mul_vector2);
-            _mm256_storeu_pd(temp + 8, mul_vector3);
-            _mm256_storeu_pd(temp + 12, mul_vector4);
-            __m256d mul_vector = _mm256_set1_pd(0.0);
-            for (int k = num / 16 * 16; k < num / 4 * 4; k += 4) {
-                mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
-            }
-            _mm256_storeu_pd(temp + 16, mul_vector);
-            for (int k = num / 4 * 4; k < num; k++) {
-                sum += mat1->data[num * i + k] * trans->data[num * j + k];
-            }
-            for (int i = 0; i < 20; i += 4) {
-                sum += temp[i];
-                sum += temp[i + 1];
-                sum += temp[i + 2];
-                sum += temp[i + 3];
-            }
-            */
-            result->data[col * i + j] = sum;
-        }
-    }
-    /*
-    #pragma omp parallel for
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col; j++) {
-            double sum = 0.0;
-            __m256d mul_vector = _mm256_set1_pd(0.0);
-            for (int k = 0; k < num / 4 * 4; k += 4) {
-                mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
-            }
+            mul_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector, mul_vector1), mul_vector2), mul_vector3), mul_vector4);
             double temp[4] = {};
             _mm256_storeu_pd(temp, mul_vector);
-            sum += (temp[0] + temp[1] + temp[2] + temp[3]);
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
+            sum += temp[0] + temp[1] + temp[2] + temp[3];
             result->data[col * i + j] = sum;
         }
     }
-    */
     deallocate_matrix(trans);
     return 0;
 }
@@ -414,14 +404,6 @@ matrix* trans_matrix(matrix *mat) {
             trans->data[row * j + i] = mat->data[col * i + j];
         }
     }
-    /*
-    #pragma omp parallel for
-    for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col; j++) {
-            trans->data[row * j + i] = mat->data[col * i + j];
-        }
-    }
-    */
     return trans;
 }
 
