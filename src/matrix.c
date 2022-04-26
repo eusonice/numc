@@ -394,10 +394,37 @@ matrix* trans_matrix(matrix *mat) {
     int col = mat->cols;
     #pragma omp parallel for
     for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col / 16 * 16; j += 16) {
+            trans->data[row * j + i] = mat->data[col * i + j];
+            trans->data[row * (j + 1) + i] = mat->data[col * i + j + 1];
+            trans->data[row * (j + 2) + i] = mat->data[col * i + j + 2];
+            trans->data[row * (j + 3) + i] = mat->data[col * i + j + 3];
+            trans->data[row * (j + 4) + i] = mat->data[col * i + j + 4];
+            trans->data[row * (j + 5) + i] = mat->data[col * i + j + 5];
+            trans->data[row * (j + 6) + i] = mat->data[col * i + j + 6];
+            trans->data[row * (j + 7) + i] = mat->data[col * i + j + 7];
+            trans->data[row * (j + 8) + i] = mat->data[col * i + j + 8];
+            trans->data[row * (j + 9) + i] = mat->data[col * i + j + 9];
+            trans->data[row * (j + 10) + i] = mat->data[col * i + j + 10];
+            trans->data[row * (j + 11) + i] = mat->data[col * i + j + 11];
+            trans->data[row * (j + 12) + i] = mat->data[col * i + j + 12];
+            trans->data[row * (j + 13) + i] = mat->data[col * i + j + 13];
+            trans->data[row * (j + 14) + i] = mat->data[col * i + j + 14];
+            trans->data[row * (j + 15) + i] = mat->data[col * i + j + 15];
+            trans->data[row * (j + 16) + i] = mat->data[col * i + j + 16];
+        }
+        for (int j = col / 16 * 16; j < col; j++) {
+            trans->data[row * j + i] = mat->data[col * i + j];
+        }
+    }
+    /*
+    #pragma omp parallel for
+    for (int i = 0; i < row; i++) {
         for (int j = 0; j < col; j++) {
             trans->data[row * j + i] = mat->data[col * i + j];
         }
     }
+    */
     return trans;
 }
 
