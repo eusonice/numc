@@ -376,16 +376,6 @@ matrix* trans_matrix(matrix *mat) {
     int col = mat->cols;
     #pragma omp parallel for
     for (int i = 0; i < row; i++) {
-        for (int j = 0; j < col / 4 * 4; j += 4) {
-            trans->data[row * j + i] = mat->data[col * i + j];
-            trans->data[row * (j + 1) + i] = mat->data[col * i + j + 1];
-            trans->data[row * (j + 2) + i] = mat->data[col * i + j + 2];
-            trans->data[row * (j + 3) + i] = mat->data[col * i + j + 3];
-        }
-        for (int j = col / 4 * 4; j < col; j++) {
-            trans->data[row * j + i] = mat->data[col * i + j];
-        }
-        /*
         for (int j = 0; j < col / 16 * 16; j += 16) {
             trans->data[row * j + i] = mat->data[col * i + j];
             trans->data[row * (j + 1) + i] = mat->data[col * i + j + 1];
@@ -413,7 +403,6 @@ matrix* trans_matrix(matrix *mat) {
         for (int j = col / 4 * 4; j < col; j++) {
             trans->data[row * j + i] = mat->data[col * i + j];
         }
-        */
     }
     return trans;
 }
