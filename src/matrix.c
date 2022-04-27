@@ -351,11 +351,11 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             for (int k = num / 16 * 16; k < num / 4 * 4; k += 4) {
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
             }
+            //mul_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector, mul_vector1), mul_vector2), mul_vector3), mul_vector4);
+            sum_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector, mul_vector1), mul_vector2), mul_vector3), mul_vector4);
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
-            //mul_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector, mul_vector1), mul_vector2), mul_vector3), mul_vector4);
-            sum_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector, mul_vector1), mul_vector2), mul_vector3), mul_vector4);
             double temp[4] = {};
             // _mm256_storeu_pd(temp, mul_vector);
             _mm256_storeu_pd(temp, sum_vector);
