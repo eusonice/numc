@@ -342,10 +342,13 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             // __m256d mul_vector3 = _mm256_set1_pd(0.0);
             // __m256d mul_vector4 = _mm256_set1_pd(0.0);
             for (int k = 0; k < num / 16 * 16; k += 16) {
+                mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 12]), _mm256_loadu_pd(&trans->data[num * j + k + 12]), _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 8]), _mm256_loadu_pd(&trans->data[num * j + k + 8]), _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 4]), _mm256_loadu_pd(&trans->data[num * j + k + 4]), _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector))));
+                /*
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 4]), _mm256_loadu_pd(&trans->data[num * j + k + 4]), mul_vector);
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 8]), _mm256_loadu_pd(&trans->data[num * j + k + 8]), mul_vector);
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k + 12]), _mm256_loadu_pd(&trans->data[num * j + k + 12]), mul_vector);
+                */
             }
             for (int k = num / 16 * 16; k < num / 4 * 4; k += 4) {
                 mul_vector = _mm256_fmadd_pd(_mm256_loadu_pd(&mat1->data[num * i + k]), _mm256_loadu_pd(&trans->data[num * j + k]), mul_vector);
@@ -353,7 +356,6 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             for (int k = num / 4 * 4; k < num; k++) {
                 sum += mat1->data[num * i + k] * trans->data[num * j + k];
             }
-
             // mul_vector = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_add_pd(mul_vector, mul_vector1), mul_vector2), mul_vector3), mul_vector4);
             double temp[4] = {};
             _mm256_storeu_pd(temp, mul_vector);
