@@ -1,7 +1,7 @@
-# 61C Project 4: numc
+# numc
 
 ## Spec:
-> The full spec can be read here: https://cs61c.org/sp22/projects/proj4/
+> The full spec can be read [here](https://cs61c.org/sp22/projects/proj4/).
 
 A simple version of NumPy, a Python library for performing mathematical and logical operations on arrays and matrices, written in C. 
 
